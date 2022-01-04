@@ -1,0 +1,8 @@
+# Auto-generated plugin.yml, generated at 2022/01/04 16:50:01 by org.bukkit.plugin.java.annotation.PluginAnnotationProcessor
+
+main: com.duck.LuciderParkour
+name: LuciderParkour
+version: 1.0.0b
+commands: {}
+permissions: {}
+api-version: '1.17'
