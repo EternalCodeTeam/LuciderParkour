@@ -13,6 +13,7 @@ import java.util.UUID;
 public class ParkourScore {
 
     private UUID uuid;
+    private String userName;
     private long time;
 
 }

@@ -1,9 +1,12 @@
 package com.duck.parkour;
 
 import com.duck.LuciderParkour;
-
-import com.duck.feature.scoreboard.arena.ArenaScoreboardManager;
+import com.duck.configuration.ConfigurationFactory;
+import com.duck.feature.scoreboard.ArenaSidebar;
+import com.duck.feature.scoreboard.LobbySidebar;
+import com.duck.feature.scoreboard.ScoreboardBuilder;
 import com.duck.feature.timer.ArenaTimer;
+import com.duck.feature.timer.LobbyTimer;
 import com.duck.user.User;
 import com.duck.user.UserManager;
 import com.duck.utils.LocationUtils;
@@ -11,16 +14,15 @@ import com.duck.utils.RandomUtils;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import org.apache.commons.lang.Validate;
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import panda.std.Option;
 import panda.std.stream.PandaStream;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public class ParkourManager {
 
@@ -28,8 +30,6 @@ public class ParkourManager {
     private final ConcurrentHashMap<String, ParkourCategory> categoryConcurrentHashMap = new ConcurrentHashMap<>();
 
     private final UserManager userManager = LuciderParkour.getInstance().getUserManager();
-    private final ArenaScoreboardManager arenaScoreboardManager = LuciderParkour.getInstance().getArenaScoreboardManager();
-
 
     public void addArena(Parkour parkour){
         Validate.notNull(parkour, "Parkour can't be null!");
@@ -43,6 +43,8 @@ public class ParkourManager {
 
         parkourMap.remove(parkour.getId());
     }
+
+
 
     public void addCategory(ParkourCategory parkourCategory){
         Validate.notNull(parkourCategory);
@@ -68,7 +70,7 @@ public class ParkourManager {
 
         Option<User> user = LuciderParkour.getInstance().getUserManager().getUser(player.getUniqueId());
 
-        if(parkour.getId() > 0 && parkour.getSpawnLocation() != null){
+        if(parkour.getId() > 0 && parkour.getSpawnLocation() != null && user.get().getLevel() > parkour.getLevelRequired()){
             Sound sound = Sound.sound(Key.key("entity.experience_orb.pickup"), Sound.Source.MUSIC, 1f, 1f);
 
             player.teleport(LocationUtils.asFullLocation(parkour.getSpawnLocation(), ", "));
@@ -78,17 +80,17 @@ public class ParkourManager {
 
             Option<ArenaTimer> arenaTimer = userManager.getTimer(user.get().getUuid());
 
-            if(arenaTimer.isDefined())
+            if(arenaTimer.isDefined()){
+                arenaTimer.get().cancel();
+            }
+
 
             player.setExp(0f);
             player.setLevel(0);
-
-            arenaScoreboardManager.sendArenaScoreboard(parkour, user.get());
+            sendParkourScoreboard(player);
         }
 
-        if(user.get().getActiveId() == parkour.getId()) {
-            player.sendMessage("Joined to " + parkour.getId());
-        }
+
     }
 
 
@@ -115,5 +117,50 @@ public class ParkourManager {
                 .of(getCategoryConcurrentHashMap().values())
                 .find(parkourCategory -> parkourCategory.getGuiIndex() == slot)
                 .get();
+    }
+
+    public void sendParkourScoreboard(Player player){
+        ArenaSidebar arenaSidebar = new ArenaSidebar();
+
+        Option<User> user = userManager.getUser(player.getUniqueId());
+
+        if(user.isDefined()){
+            User u = user.get();
+            Parkour parkour = getArena(u.getActiveId()).get();
+
+            arenaSidebar.createBoard(parkour, u);
+        }
+    }
+
+    public void sendLobbyScoreboard(Player player){
+        LobbySidebar lobbySidebar = new LobbySidebar();
+
+        Option<User> user = userManager.getUser(player.getUniqueId());
+
+        if(user.isDefined()){
+            User u = user.get();
+
+            lobbySidebar.createBoard(u);
+        }
+    }
+
+    public void lobby(ConfigurationFactory configurationFactory, User user, Player player) {
+        Location location = LocationUtils.asFullLocation(configurationFactory.getGeneralConfiguration().lobbyLocation, ", ");
+
+        Option<ArenaTimer> arenaTimer = userManager.getTimer(player.getUniqueId());
+
+        int activeParkour = user.getActiveId();
+        if (activeParkour > 0) {
+            if (arenaTimer.isDefined()) {
+                if (!arenaTimer.get().isCancelled())
+                    arenaTimer.get().cancel();
+
+                userManager.removeTimer(user);
+            }
+
+            player.teleport(location);
+            user.setActiveId(0);
+            new LobbyTimer(1, LuciderParkour.getInstance(), user);
+        }
     }
 }

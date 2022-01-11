@@ -3,20 +3,13 @@ package com.duck.user;
 import com.duck.LuciderParkour;
 import com.duck.configuration.ConfigurationFactory;
 import com.duck.feature.timer.ArenaTimer;
-import com.duck.feature.timer.LobbyScoreboardTimer;
-import com.duck.feature.timer.TimerType;
-import com.duck.utils.BossBarUtils;
 import com.duck.utils.ChatUtils;
 import lombok.Getter;
 import lombok.Setter;
-import net.kyori.adventure.bossbar.BossBar;
 import org.apache.commons.lang.Validate;
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
-import org.checkerframework.checker.units.qual.C;
 import panda.std.Option;
 
-import java.util.*;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Getter
@@ -24,19 +17,10 @@ import java.util.concurrent.ConcurrentHashMap;
 public class UserManager {
     private ConcurrentHashMap<UUID, User> userConcurrentHashMap = new ConcurrentHashMap<>();
     private ConcurrentHashMap<UUID, ArenaTimer> arenaTimerConcurrentHashMap = new ConcurrentHashMap<>();
-    private ConcurrentHashMap<UUID, LobbyScoreboardTimer> lobbyScoreboardTimerConcurrentHashMap = new ConcurrentHashMap<>();
 
     private final ConfigurationFactory configurationFactory = LuciderParkour.getInstance().getConfigurationFactory();
 
 
-    public void addLobbyTask(UUID uuid){
-        if(!lobbyScoreboardTimerConcurrentHashMap.containsKey(uuid))
-            lobbyScoreboardTimerConcurrentHashMap.put(uuid, new LobbyScoreboardTimer(uuid, 1));
-    }
-
-    public void removeLobbyTask(UUID uuid){
-        lobbyScoreboardTimerConcurrentHashMap.remove(uuid);
-    }
 
     public void removeUser(User user){
         Validate.notNull(user, "User can't be null.");
@@ -50,7 +34,6 @@ public class UserManager {
         if(!userConcurrentHashMap.containsKey(user.getUuid()))
             userConcurrentHashMap.put(user.getUuid(), user);
     }
-
     public void removeTimer(User user){
         Validate.notNull(user, "User can't be null.");
 

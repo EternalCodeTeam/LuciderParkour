@@ -2,14 +2,13 @@ package com.duck.listeners;
 
 import com.duck.LuciderParkour;
 import com.duck.configuration.ConfigurationFactory;
-import com.duck.feature.scoreboard.ScoreboardManager;
-import com.duck.feature.scoreboard.lobby.LobbyScoreboardManager;
+import com.duck.feature.gui.player.PlayerInventoryManager;
+import com.duck.feature.timer.LobbyTimer;
 import com.duck.user.User;
-import com.duck.user.UserFactory;
 import com.duck.user.UserManager;
 import com.duck.utils.ChatUtils;
 import com.duck.utils.LocationUtils;
-import org.bukkit.Location;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -23,8 +22,7 @@ public class PlayerJoinListener implements Listener {
 
     private final UserManager userManager = LuciderParkour.getInstance().getUserManager();
     private final ConfigurationFactory configurationFactory = LuciderParkour.getInstance().getConfigurationFactory();
-    private final LobbyScoreboardManager lobbyScoreboardManager = LuciderParkour.getInstance().getLobbyScoreboardManager();
-    private final ScoreboardManager scoreboardManager = LuciderParkour.getInstance().getScoreboardManager();
+
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event){
         Player player = event.getPlayer();
@@ -54,8 +52,11 @@ public class PlayerJoinListener implements Listener {
             player.sendMessage(ChatUtils.component(prefix + " &7Welcome, &b" + player.getName()));
         }else {
             player.sendMessage(ChatUtils.component(prefix + " &7Welcome back, &b" + player.getName()));
-
         }
+
+        new LobbyTimer(1, LuciderParkour.getInstance(), user.get());
+        player.setGameMode(GameMode.ADVENTURE);
+        new PlayerInventoryManager().setupInventory(player);
     }
 
     @EventHandler
@@ -64,7 +65,7 @@ public class PlayerJoinListener implements Listener {
 
         Option<User> user = userManager.getUser(player.getUniqueId());
 
+        user.get().setActiveId(0);
         userManager.removeTimer(user.get());
-        userManager.removeLobbyTask(user.get().getUuid());
     }
 }

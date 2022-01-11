@@ -2,7 +2,6 @@ package com.duck.listeners;
 
 import com.duck.LuciderParkour;
 import com.duck.configuration.ConfigurationFactory;
-import com.duck.feature.scoreboard.arena.ArenaScoreboardManager;
 import com.duck.feature.timer.ArenaTimer;
 import com.duck.feature.timer.TimerType;
 import com.duck.parkour.Parkour;
@@ -15,7 +14,6 @@ import com.duck.utils.LocationUtils;
 import com.duck.utils.TimeUtils;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
-import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -26,7 +24,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import panda.std.Option;
 
-import java.util.Optional;
 import java.util.UUID;
 
 public class PlayerMoveListener implements Listener {
@@ -34,7 +31,6 @@ public class PlayerMoveListener implements Listener {
     private final ParkourManager parkourManager = LuciderParkour.getInstance().getParkourManager();
     private final ConfigurationFactory configurationFactory = LuciderParkour.getInstance().getConfigurationFactory();
     private final ScoreManager scoreManager = LuciderParkour.getInstance().getScoreManager();
-    private final ArenaScoreboardManager arenaScoreboardManager = LuciderParkour.getInstance().getArenaScoreboardManager();
 
     @EventHandler
     public void onMove(PlayerMoveEvent event){
@@ -45,13 +41,13 @@ public class PlayerMoveListener implements Listener {
         if(user.getActiveId() > 0){
             Parkour parkour = parkourManager.getArena(user.getActiveId()).get();
 
-            checkCurrentStartLocation(player.getUniqueId(), parkour);
-            checkCurrentEndLocation(player.getUniqueId(), parkour);
-            checkCurrentFailBlock(player.getUniqueId(), parkour);
+                checkCurrentStartLocation(player.getUniqueId(), parkour);
+                checkCurrentEndLocation(player.getUniqueId(), parkour);
+                checkCurrentFailBlock(event, player.getUniqueId(), parkour);
         }
     }
 
-    private void checkCurrentFailBlock(UUID uniqueId, Parkour parkour) {
+    private void checkCurrentFailBlock(PlayerMoveEvent event, UUID uniqueId, Parkour parkour) {
         String messagePrefix = configurationFactory.getGeneralConfiguration().standardParkourPrefix;
 
         Player player = Option.of(Bukkit.getPlayer(uniqueId)).get();
@@ -60,19 +56,20 @@ public class PlayerMoveListener implements Listener {
         Block underPlayerBlock = location.getBlock().getRelative(BlockFace.DOWN);
         User user = userManager.getUser(player.getUniqueId()).get();
 
-        if(parkour.getFailBlocks().contains(underPlayerBlock.getType())){
+        if(parkour.getFailBlocks().contains(underPlayerBlock.getType()) && isOnTheEgde(event)){
             Option<ArenaTimer> arenaTimer = userManager.getTimer(player.getUniqueId());
+
+            player.teleport(LocationUtils.asFullLocation(parkour.getSpawnLocation(), ", "));
 
             if(arenaTimer.isDefined()){
 
-                arenaScoreboardManager.sendArenaScoreboard(parkour, user);
                 if(!arenaTimer.get().isCancelled())
                     arenaTimer.get().cancel();
 
                 userManager.removeTimer(user);
             }
 
-            player.teleport(LocationUtils.asFullLocation(parkour.getSpawnLocation(), ", "));
+            parkourManager.sendParkourScoreboard(player);
         }
     }
 
@@ -89,34 +86,29 @@ public class PlayerMoveListener implements Listener {
                 double requiredXp = userManager.getXpLeft(user);
 
                 if(arenaTimer.isDefined()){
-
                     if(!arenaTimer.get().isCancelled())
                         arenaTimer.get().cancel();
 
-                    long time = arenaTimer.get().getElapsedTime();
+                        long time = arenaTimer.get().getElapsedTime();
+                        userManager.removeTimer(user);
+                        player.sendMessage(ChatUtils.component(messagePrefix + " &7You've completed this arena in &b"
+                                + TimeUtils.letterTimeFormat(time)));
+                        scoreManager.addScore(user.getUuid(), time, parkour);
+                        parkourManager.sendParkourScoreboard(player);
 
-                    userManager.removeTimer(user);
-                    player.sendMessage(ChatUtils.component(messagePrefix + " &7You've completed this arena in &b"
-                    + TimeUtils.letterTimeFormat(time)));
+                        user.setXp(user.getXp() + parkour.getXpReward());
+                        int nextLevel = user.getLevel() + 1;
+                        player.playSound(Sound.sound(
+                                Key.key("entity.player.levelup"),
+                                Sound.Source.PLAYER,
+                                1.0f,
+                                1.1f
+                        ), Sound.Emitter.self());
 
-                    scoreManager.addScore(user.getUuid(), time, parkour);
-                    arenaScoreboardManager.sendArenaScoreboard(parkour, user);
-
-                    user.setXp(user.getXp() + parkour.getXpReward());
-
-                    int nextLevel = user.getLevel() + 1;
-
-                    player.playSound(Sound.sound(
-                            Key.key("entity.player.levelup"),
-                            Sound.Source.PLAYER,
-                            1.0f,
-                            1.1f
-                    ), Sound.Emitter.self());
-
-                    player.sendMessage(ChatUtils.component(messagePrefix + " &7You've received &6" + parkour.getXpReward() + " &7experience. You need &3" + requiredXp + " &7to levelup to level &3" + nextLevel));
-                    userManager.levelUp(user);
+                        player.sendMessage(ChatUtils.component(messagePrefix + " &7You've received &6" + parkour.getXpReward() + " &7experience. You need &3" + requiredXp + " &7to levelup to level &3" + nextLevel));
+                        userManager.levelUp(user);
+                    }
                 }
-            }
         });
 
     }
@@ -134,7 +126,6 @@ public class PlayerMoveListener implements Listener {
                 if(!arenaTimer.isDefined()){
                     userManager.addTimer(user, new ArenaTimer(uniqueId, TimerType.EXP_BAR));
 
-                    arenaScoreboardManager.sendArenaScoreboard(parkour, user);
 
                     player.playSound(Sound.sound(
                             Key.key("block.piston.contract"),
@@ -143,6 +134,8 @@ public class PlayerMoveListener implements Listener {
                             1.1f
                     ), Sound.Emitter.self());
 
+
+                    parkourManager.sendParkourScoreboard(player);
                     player.sendMessage(ChatUtils.component(messagePrefix + " &7You've started this arena. Run!"));
                 }
             }
@@ -150,5 +143,7 @@ public class PlayerMoveListener implements Listener {
 
     }
 
-
+    public boolean isOnTheEgde(PlayerMoveEvent event){
+        return Math.abs(event.getTo().getZ() - event.getTo().getBlockZ()) > 0.5 /*or whatever value suits you*/ || Math.abs(event.getTo().getX() - event.getTo().getBlockX()) > 0.5;
+    }
 }

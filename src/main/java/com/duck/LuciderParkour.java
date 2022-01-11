@@ -1,5 +1,6 @@
 package com.duck;
 
+import com.duck.commands.CategoriesCommand;
 import com.duck.commands.ParkourCommand;
 import com.duck.commands.PreferencesCommand;
 import com.duck.commands.UserCommand;
@@ -7,11 +8,11 @@ import com.duck.configuration.ConfigurationFactory;
 import com.duck.data.flat.FlatDataManager;
 import com.duck.data.flat.FlatDataTransfer;
 import com.duck.feature.gui.GUIManager;
-import com.duck.feature.scoreboard.ScoreboardManager;
-import com.duck.feature.scoreboard.arena.ArenaScoreboardManager;
-import com.duck.feature.scoreboard.lobby.LobbyScoreboardManager;
 import com.duck.feature.timer.ParticlesTimer;
 import com.duck.listeners.*;
+import com.duck.listeners.inventory.PlayerInventoryDragItemsListener;
+import com.duck.listeners.inventory.PlayerInventoryDropItemsListener;
+import com.duck.listeners.inventory.PlayerInventoryInteractListener;
 import com.duck.parkour.ParkourCategoryFactory;
 import com.duck.parkour.ParkourFactory;
 import com.duck.parkour.ParkourManager;
@@ -24,7 +25,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.java.annotation.plugin.ApiVersion;
 import org.bukkit.plugin.java.annotation.plugin.Plugin;
+import org.bukkit.scoreboard.ScoreboardManager;
 import panda.std.stream.PandaStream;
+
+import java.util.logging.Level;
 
 @Plugin(name = "LuciderParkour", version = "1.0.0b")
 @ApiVersion(ApiVersion.Target.v1_17)
@@ -46,19 +50,20 @@ public class LuciderParkour extends JavaPlugin {
     private UserManager userManager;
     private UserFactory userFactory;
 
-    private ArenaScoreboardManager arenaScoreboardManager;
-    private LobbyScoreboardManager lobbyScoreboardManager;
-    private ScoreboardManager scoreboardManager;
 
     private GUIManager guiManager;
 
     private BukkitFrame bukkitFrame;
+
+    private ScoreboardManager scoreboardManager;
 
     @Override
     public void onDisable() {
         flatDataTransfer.transferUsersIntoConfiguration();
         flatDataTransfer.transferArenasIntoConfiguration();
         flatDataTransfer.transferCategoriesIntoConfiguration();
+
+
     }
 
     @Override
@@ -75,8 +80,6 @@ public class LuciderParkour extends JavaPlugin {
 
         this.configurationFactory = new ConfigurationFactory();
 
-        this.scoreboardManager = new ScoreboardManager();
-        this.arenaScoreboardManager = new ArenaScoreboardManager();
 
         this.userManager = new UserManager();
         this.userFactory = new UserFactory(userManager);
@@ -85,7 +88,6 @@ public class LuciderParkour extends JavaPlugin {
         this.parkourFactory = new ParkourFactory();
         this.parkourCategoryFactory = new ParkourCategoryFactory();
 
-        this.lobbyScoreboardManager = new LobbyScoreboardManager();
 
         configurationFactory.initConfigs(this);
 
@@ -97,12 +99,16 @@ public class LuciderParkour extends JavaPlugin {
         this.scoreManager = new ScoreManager();
 
 
-        buildListeners();
+
         flatDataTransfer.transferCategoriesIntoMemoryCache();
         this.guiManager = new GUIManager();
 
+
         this.bukkitFrame = new BukkitFrame(this);
+
+
         buildCommands();
+        buildListeners();
 
         new ParticlesTimer(20L, this);
     }
@@ -131,13 +137,6 @@ public class LuciderParkour extends JavaPlugin {
         return userFactory;
     }
 
-    public LobbyScoreboardManager getLobbyScoreboardManager() {
-        return lobbyScoreboardManager;
-    }
-
-    public ScoreboardManager getScoreboardManager() {
-        return scoreboardManager;
-    }
 
     public BukkitFrame getBukkitFrame() {
         return bukkitFrame;
@@ -163,9 +162,14 @@ public class LuciderParkour extends JavaPlugin {
         return parkourCategoryFactory;
     }
 
+    public ScoreboardManager getScoreboardManager() {
+        return scoreboardManager;
+    }
+
+
     private void buildCommands(){
         PandaStream.of(
-                new ParkourCommand(), new UserCommand(), new PreferencesCommand())
+                new ParkourCommand(), new UserCommand(), new PreferencesCommand(), new CategoriesCommand())
                 .forEach(command -> bukkitFrame.registerCommands(command));
     }
 
@@ -175,11 +179,11 @@ public class LuciderParkour extends JavaPlugin {
                         new PlayerFallDamageListener(),
                         new PlayerFoodLevelChangeListener(),
                         new ChatListener(),
-                        new DateChangeListener())
+                        new DateChangeListener(),
+                        new PlayerInventoryInteractListener(),
+                        new PlayerInventoryDragItemsListener(),
+                        new PlayerInventoryDropItemsListener())
                 .forEach(listener -> Bukkit.getPluginManager().registerEvents(listener, this));
     }
 
-    public ArenaScoreboardManager getArenaScoreboardManager() {
-        return arenaScoreboardManager;
-    }
 }

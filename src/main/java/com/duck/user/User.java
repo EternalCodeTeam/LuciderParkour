@@ -44,4 +44,8 @@ public class User {
         }
     }
 
+    public Player toPlayer(){
+        return Option.of(Bukkit.getPlayer(uuid)).get();
+    }
+
 }

@@ -3,6 +3,7 @@ package com.duck.feature.timer;
 import com.duck.LuciderParkour;
 import com.duck.utils.BossBarUtils;
 import com.duck.utils.ChatUtils;
+import com.duck.utils.TimeUtils;
 import lombok.*;
 import net.kyori.adventure.bossbar.BossBar;
 import org.bukkit.Bukkit;
@@ -54,11 +55,16 @@ public class ArenaTimer extends BukkitRunnable {
                         player.setLevel(seconds);
                     };
 
-                    case ACTION_BAR -> timerType -> System.out.println(" s");
-                    case SCOREBOARD -> timerType -> System.out.println(" s s");
-                    case BOSS_BAR -> timerType -> System.out.println(" s   ");
+                    case ACTION_BAR -> timerType -> {
+                        String formattedTime = TimeUtils.letterTimeFormat(timePassed);
+
+                        player.sendActionBar(ChatUtils.component("&7> &b" + formattedTime));
+                    };
+
+                    default -> null;
                 };
 
+        assert acceptTimerWithType != null;
         acceptTimerWithType.accept(uuid);
     }
 

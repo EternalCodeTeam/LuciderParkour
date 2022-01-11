@@ -3,7 +3,7 @@ package com.duck.utils;
 import io.papermc.paper.text.PaperComponents;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import net.md_5.bungee.api.ChatColor;
+import org.bukkit.ChatColor;
 import panda.std.stream.PandaStream;
 
 import java.util.List;

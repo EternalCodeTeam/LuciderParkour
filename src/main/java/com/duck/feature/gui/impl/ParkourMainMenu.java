@@ -9,6 +9,7 @@ import com.duck.utils.ChatUtils;
 import dev.triumphteam.gui.builder.item.ItemBuilder;
 import dev.triumphteam.gui.guis.Gui;
 import dev.triumphteam.gui.guis.GuiItem;
+import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
@@ -43,7 +44,7 @@ public class ParkourMainMenu implements NonPagedMenu<LuciderParkour> {
                         .forEach(parkourCategory -> {
                             gui.setItem(parkourCategory.getGuiIndex(),
                                     ItemBuilder.from(parkourCategory.getGuiMaterial())
-                                            .name(ChatUtils.component(parkourCategory.getDisplayName()))
+                                            .name(ChatUtils.component(parkourCategory.getDisplayName().replace("_", " ")))
                                             .lore(
                                                     ChatUtils.component("&7XP: &3" + parkourCategory.getXpReward()),
                                                     ChatUtils.component("&7Required Level: &3" + parkourCategory.getRequiredLevel())
@@ -63,6 +64,8 @@ public class ParkourMainMenu implements NonPagedMenu<LuciderParkour> {
                 parkourCategoryMenu.openInventory(user);
             }
         });
+
+        gui.getFiller().fill(ItemBuilder.from(Material.GRAY_STAINED_GLASS_PANE).asGuiItem());
     }
 
     @Override

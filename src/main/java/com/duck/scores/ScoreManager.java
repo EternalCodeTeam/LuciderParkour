@@ -32,7 +32,7 @@ public class ScoreManager {
 
 
        if(!contains(uuid, parkour)){
-           parkour.getParkourScores().add(new ParkourScore(uuid, time));
+           parkour.getParkourScores().add(new ParkourScore(uuid, user.toPlayer().getName(), time));
 
            user.execute(player -> player.sendMessage(ChatUtils.component(prefix +
                    " &7Congratulations, you've completed this map with new score. Time was &b" +
@@ -41,7 +41,7 @@ public class ScoreManager {
        else if(isBetterThanLast(getByUUID(uuid, parkour).getTime(), time)) {
            int scoreIndex = parkour.getParkourScores().indexOf(getByUUID(uuid, parkour));
 
-           parkour.getParkourScores().set(scoreIndex, new ParkourScore(uuid, time));
+           parkour.getParkourScores().set(scoreIndex, new ParkourScore(uuid, user.toPlayer().getName(), time));
            user.execute(player -> player.sendMessage(ChatUtils.component(prefix +
                    " &7Congratulations, you've made better time. It is &b" +
                    TimeUtils.letterTimeFormat(time))));

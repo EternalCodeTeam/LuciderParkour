@@ -4,8 +4,8 @@ import com.duck.LuciderParkour;
 import com.duck.configuration.ConfigurationFactory;
 import com.duck.configuration.parsers.ParsedLocation;
 import com.duck.feature.gui.GUIManager;
-import com.duck.feature.scoreboard.lobby.LobbyScoreboardManager;
 import com.duck.feature.timer.ArenaTimer;
+import com.duck.feature.timer.LobbyTimer;
 import com.duck.parkour.*;
 import com.duck.scores.ScoreManager;
 import com.duck.user.User;
@@ -15,13 +15,13 @@ import com.duck.utils.LocationUtils;
 import me.saiintbrisson.minecraft.command.annotation.Command;
 import me.saiintbrisson.minecraft.command.command.Context;
 import net.dzikoysk.cdn.source.Source;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import panda.std.Option;
+import panda.std.stream.PandaStream;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -33,7 +33,6 @@ public class ParkourCommand {
     private final UserManager userManager = LuciderParkour.getInstance().getUserManager();
     private final ParkourManager parkourManager = LuciderParkour.getInstance().getParkourManager();
     private final ConfigurationFactory configurationFactory = LuciderParkour.getInstance().getConfigurationFactory();
-    private final LobbyScoreboardManager lobbyScoreboardManager = LuciderParkour.getInstance().getLobbyScoreboardManager();
     private final GUIManager guiManager = LuciderParkour.getInstance().getGuiManager();
     private final ParkourCategoryFactory parkourCategoryFactory = LuciderParkour.getInstance().getParkourCategoryFactory();
 
@@ -60,9 +59,7 @@ public class ParkourCommand {
                 parkourFactory.removeArena(arenaId, user.get());
             };
 
-            case "openGui" -> player -> {
-                guiManager.getParkourMainMenu().openInventory(user.get());
-            };
+            case "gui" -> player -> guiManager.getParkourMainMenu().openInventory(user.get());
 
             case "random" -> player -> {
                 Parkour randomizedParkour = parkourManager.randomizeParkour();
@@ -93,6 +90,7 @@ public class ParkourCommand {
 
                     player.teleport(location);
                     user.get().setActiveId(0);
+                    new LobbyTimer(1, LuciderParkour.getInstance(), user.get());
                 }
             };
 
@@ -107,22 +105,6 @@ public class ParkourCommand {
 
             case "add" -> player -> {
                 Consumer<Player> addConsumer = switch(playerContext.getArg(1)){
-                    case "category" -> player1 -> {
-                        String category = playerContext.getArg(2, String.class);
-
-                        parkourCategoryFactory.createCategory(user.get(), category);
-                    };
-
-                    case "score" -> player1 -> {
-                        int arenaId = playerContext.getArg(2, int.class);
-                        String playerName = playerContext.getArg(3, String.class);
-                        long time = playerContext.getArg(4, long.class);
-
-                        Parkour parkour = parkourManager.getArena(arenaId).get();
-                        Player player2 = Option.of(Bukkit.getPlayer(playerName)).get();
-
-                        scoreManager.addScore(player2.getUniqueId(), time, parkour);
-                    };
 
                     case "startblock" -> player1 -> {
                         int arenaId = playerContext.getArg(2, int.class);
@@ -179,21 +161,6 @@ public class ParkourCommand {
 
             case "remove" -> player -> {
                 Consumer<Player> removeConsumer = switch(playerContext.getArg(1)){
-
-                    case "category" -> player1 -> {
-                        String category = playerContext.getArg(2, String.class);
-
-                        parkourCategoryFactory.removeParkourCategory(category, user.get());
-                    };
-
-                    case "score" -> player1 -> {
-                        int arenaId = playerContext.getArg(2, int.class);
-                        String playerName = playerContext.getArg(3, String.class);
-
-                        Parkour parkour = parkourManager.getArena(arenaId).get();
-                        Player player2 = Option.of(Bukkit.getPlayer(playerName)).get();
-                        scoreManager.removeScore(user.get().getUuid(), parkour);
-                    };
 
 
                     case "startblock" -> player1 -> {
@@ -267,10 +234,14 @@ public class ParkourCommand {
                         int arenaId = playerContext.getArg(2, int.class);
                         ParkourCategory parkourCategory = parkourManager.getParkourCategory(category).get();
 
-                        if(!parkourCategory.getIds().contains(arenaId)){
-                            parkourCategory.getIds().add(arenaId);
-                            player1.sendMessage(ChatUtils.component(messagePrefix + " &7changed category to &6" + parkourCategory.getName()));
+                        if (parkourManager.getAllCategories()
+                                .stream()
+                                .anyMatch(parkourCategory1 -> parkourCategory1.getIds().contains(arenaId))) {
+                            PandaStream.of(parkourManager.getAllCategories())
+                                    .map(parkourCategory1 -> parkourCategory1.getIds().remove(arenaId));
+
                         }
+                        parkourCategory.getIds().add(arenaId);
 
                     };
 
