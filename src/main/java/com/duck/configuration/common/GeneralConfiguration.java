@@ -36,13 +36,34 @@ public class GeneralConfiguration implements Serializable {
             .put(8, 650.0)
             .put(9, 800.0)
             .put(10, 1250.0)
+            .put(11, 1550.0)
+            .put(12, 2000.0)
+            .put(13, 3500.0)
+            .put(14, 3900.0)
+            .put(15, 4500.0)
+            .put(16, 5600.0)
+            .put(17, 7600.0)
+            .put(18, 9203.0)
+            .put(19, 10930.0)
+            .put(20, 11230.0)
+            .put(21, 12505.0)
+            .put(22, 13542.0)
+            .put(23, 14503.0)
+            .put(24, 15503.0)
+            .put(25, 17503.0)
+            .put(26, 19000.0)
+            .put(27, 21402.0)
+            .put(28, 24302.0)
+            .put(29, 25202.0)
+            .put(30, 28503.0)
+            .put(31, 31203.0)
             .build();
 
-    @Description("# Default parkour scoreboard title")
-    public String parkourScoreboardTitle = "&fTop %top-value-size% on %top-value-arena%.";
+    @Description("# Admin permissions")
+    public String adminPermission = "luciderparkour.admin";
 
-    @Description("# Default parkour scoreboard score")
-    public String parkourScoreboardScore = "&7%user-top-position%. &e%user-top-name% &a%user-top-time%";
+    @Description("# User permissions")
+    public String userPermission = "luciderparkour.user";
 
     @Description("# Lobby location")
     public String lobbyLocation = LocationUtils.fromFullLocation(new Location(Bukkit.getWorld("world"), 1, 1, 1, 1, 1), ", ");

@@ -52,11 +52,10 @@ public class PlayerJoinListener implements Listener {
             player.sendMessage(ChatUtils.component(prefix + " &7Welcome, &b" + player.getName()));
         }else {
             player.sendMessage(ChatUtils.component(prefix + " &7Welcome back, &b" + player.getName()));
+            new LobbyTimer(1, LuciderParkour.getInstance(), user.get());
+            player.setGameMode(GameMode.ADVENTURE);
+            new PlayerInventoryManager().setupInventory(player);
         }
-
-        new LobbyTimer(1, LuciderParkour.getInstance(), user.get());
-        player.setGameMode(GameMode.ADVENTURE);
-        new PlayerInventoryManager().setupInventory(player);
     }
 
     @EventHandler

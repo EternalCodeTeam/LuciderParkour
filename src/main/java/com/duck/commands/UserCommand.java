@@ -20,6 +20,9 @@ public class UserCommand {
     private final UserManager userManager = LuciderParkour.getInstance().getUserManager();
     private final ConfigurationFactory configurationFactory = LuciderParkour.getInstance().getConfigurationFactory();
 
+    private final String userPermissionString = configurationFactory.getGeneralConfiguration().userPermission;
+    private final String adminPermissionString = configurationFactory.getGeneralConfiguration().adminPermission;
+
     @Command(name = "users")
     public void onUserCommandResponse(Context<Player> playerContext)
     {
@@ -121,6 +124,7 @@ public class UserCommand {
             default -> throw new IllegalStateException("Unexpected value: " + firstArgument);
         };
 
-        playerConsumer.accept(playerContext.getSender());
+        if(playerContext.testPermission(adminPermissionString, false))
+            playerConsumer.accept(playerContext.getSender());
     }
 }

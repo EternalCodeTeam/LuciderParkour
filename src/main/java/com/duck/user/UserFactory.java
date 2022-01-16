@@ -1,5 +1,6 @@
 package com.duck.user;
 
+import com.duck.feature.timer.TimerType;
 import org.bukkit.Bukkit;
 import panda.std.Option;
 import panda.std.Result;
@@ -31,6 +32,7 @@ public class UserFactory {
                                 .xp(0)
                                 .activeId(0)
                                 .scoresLimit(10)
+                                .timerType(TimerType.EXP_BAR)
                                 .build()
                         )
                 )

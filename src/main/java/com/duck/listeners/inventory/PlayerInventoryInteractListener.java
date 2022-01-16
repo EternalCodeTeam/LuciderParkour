@@ -7,6 +7,8 @@ import com.duck.feature.gui.player.PlayerInventoryManager;
 import com.duck.parkour.ParkourManager;
 import com.duck.user.User;
 import com.duck.user.UserManager;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -15,8 +17,9 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import panda.std.Option;
 
-import java.util.Objects;
-import java.util.function.BiConsumer;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 public class PlayerInventoryInteractListener implements Listener {
@@ -26,36 +29,57 @@ public class PlayerInventoryInteractListener implements Listener {
     private final GUIManager guiManager = LuciderParkour.getInstance().getGuiManager();
     private final PlayerInventoryManager playerInventoryManager = new PlayerInventoryManager();
 
+    private final Map<UUID, Boolean> clickedItem = new HashMap<>();
+
+
     @EventHandler
     public void onInventoryItemsClickInteract(PlayerInteractEvent event){
         Action action = event.getAction();
         Player player = event.getPlayer();
-        ItemStack clickedItem = event.getItem();
+
         User user = userManager.getUser(player.getUniqueId()).get();
 
-        if(action.isLeftClick() || action.isRightClick()){
-            Option<ItemStack> lobbyItemOption = Option.of(playerInventoryManager.getLobbyItem());
-            Option<ItemStack> parkourGuiItemOption = Option.of(playerInventoryManager.getOpenParkourGuiItem());
+        ItemStack openGuiItem = playerInventoryManager.getOpenParkourGuiItem();
+        ItemStack lobbyItem = playerInventoryManager.getLobbyItem();
 
-            if(clickedItem != null){
-                checkSelectedItem(event, lobbyItemOption.get(),
-                        (itemStack, event1) -> {
-                            parkourManager.lobby(configurationFactory, user, player);
-                            event1.setCancelled(true);
-                        });
 
-                checkSelectedItem(event, parkourGuiItemOption.get(),
-                        (itemStack, event1) -> {
-                            guiManager.getParkourMainMenu().openInventory(user);
-                            event1.setCancelled(true);
-                        });
+        if(player.getInventory().getItemInMainHand().getType() != Material.AIR){
+            switch(action){
+                case LEFT_CLICK_AIR, RIGHT_CLICK_AIR -> {
+                    executeIsEquals(player, openGuiItem,
+                        player1 -> guiManager.getParkourMainMenu().openInventory(user));
+
+                    executeIsEquals(player, lobbyItem,
+                        player1 -> parkourManager.lobby(configurationFactory, user, player1));
+                }
+
+                case LEFT_CLICK_BLOCK, RIGHT_CLICK_BLOCK -> {
+                    if(event.getClickedBlock() != null && event.getClickedBlock().getType() != Material.AIR){
+                        executeIsEquals(player, openGuiItem,
+                            player1 -> guiManager.getParkourMainMenu().openInventory(user));
+
+                        executeIsEquals(player, lobbyItem,
+                            player1 -> parkourManager.lobby(configurationFactory, user, player1));
+                    }
+                }
             }
         }
     }
 
-    public void checkSelectedItem(PlayerInteractEvent event, ItemStack itemStack
-            , BiConsumer<ItemStack, PlayerInteractEvent> consumer){
-        if(Objects.equals(event.getItem(), itemStack))
-            consumer.accept(itemStack, event);
+    public void executeIsEquals(Player player, ItemStack itemStack, Consumer<Player> playerConsumer){
+        if(player.getInventory().getItemInMainHand().isSimilar(itemStack)){
+            if(!clickedItem.containsKey(player.getUniqueId())) {
+                clickedItem.put(player.getUniqueId(), true);
+                playerConsumer.accept(player);
+            }else {
+                clickedItem.replace(player.getUniqueId(), true);
+                playerConsumer.accept(player);
+            }
+
+            clickedItem.replace(player.getUniqueId(), false);
+
+
+        }
     }
+
 }

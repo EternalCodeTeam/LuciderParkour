@@ -15,4 +15,5 @@ public class GUIManager {
     public ParkourMainMenu getParkourMainMenu() {
         return parkourMainMenu;
     }
+
 }

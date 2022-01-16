@@ -61,7 +61,9 @@ public class ParkourCategoryMenu implements NonPagedMenu<LuciderParkour> {
 
                         List<Component> totalDescription = List.of(
                                 ChatUtils.component("&7Required level: &3" + parkour.getLevelRequired()),
-                                ChatUtils.component("&7Xp reward: &3" + parkour.getXpReward()));
+                                ChatUtils.component("&7Xp reward: &3" + parkour.getXpReward()),
+                                ChatUtils.component("&3First score username: &7" + ScoreUtils.getFirstPlayerScore(parkour).getName()),
+                                ChatUtils.component("&3First score time: &7" + TimeUtils.letterTimeFormat(ScoreUtils.getFirstPlayerTime(parkour))));
 
                         gui.addItem(
                                 ItemBuilder

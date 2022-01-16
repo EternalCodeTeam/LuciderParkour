@@ -70,7 +70,7 @@ public class ParkourManager {
 
         Option<User> user = LuciderParkour.getInstance().getUserManager().getUser(player.getUniqueId());
 
-        if(parkour.getId() > 0 && parkour.getSpawnLocation() != null && user.get().getLevel() > parkour.getLevelRequired()){
+        if(parkour.getId() > 0 && parkour.getSpawnLocation() != null && user.get().getLevel() >= parkour.getLevelRequired()){
             Sound sound = Sound.sound(Key.key("entity.experience_orb.pickup"), Sound.Source.MUSIC, 1f, 1f);
 
             player.teleport(LocationUtils.asFullLocation(parkour.getSpawnLocation(), ", "));

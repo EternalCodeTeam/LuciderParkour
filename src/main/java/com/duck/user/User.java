@@ -1,5 +1,6 @@
 package com.duck.user;
 
+import com.duck.feature.timer.TimerType;
 import lombok.*;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -33,6 +34,7 @@ public class User {
     private boolean highScoresScoreboardVisibility;
 
     private int prefixIndex;
+    private TimerType timerType;
 
     private List<User> friends;
 

@@ -12,22 +12,24 @@ public class PlayerInventoryManager {
     private ItemStack openParkourGuiItem;
 
     public void buildItems(){
-        this.lobbyItem = ItemBuilder.from(Material.COMPASS)
+        this.lobbyItem = ItemBuilder.from(Material.CLOCK)
                 .amount(1)
                 .name(ChatUtils.component("&7> &3Lobby Item"))
                 .build();
 
         this.openParkourGuiItem = ItemBuilder.from(Material.MINECART)
                 .amount(1)
-                .name(ChatUtils.component("&7 &6Parkour Selector"))
+                .name(ChatUtils.component("&7> &6Parkour Selector"))
                 .build();
     }
 
     public ItemStack getLobbyItem(){
+        buildItems();
         return lobbyItem;
     }
 
     public ItemStack getOpenParkourGuiItem(){
+        buildItems();
         return openParkourGuiItem;
     }
 
@@ -35,7 +37,7 @@ public class PlayerInventoryManager {
         buildItems();
         player.getInventory().clear();
 
-        player.getInventory().setItem(36, openParkourGuiItem);
-        player.getInventory().setItem(44, lobbyItem);
+        player.getInventory().setItem(0, openParkourGuiItem);
+        player.getInventory().setItem(8, lobbyItem);
     }
 }

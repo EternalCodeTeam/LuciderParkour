@@ -1,6 +1,7 @@
 package com.duck.feature.gui.impl;
 
 import com.duck.LuciderParkour;
+import com.duck.feature.gui.GUIManager;
 import com.duck.feature.gui.NonPagedMenu;
 import com.duck.parkour.ParkourCategory;
 import com.duck.parkour.ParkourManager;
@@ -22,6 +23,7 @@ public class ParkourMainMenu implements NonPagedMenu<LuciderParkour> {
     private final ParkourManager parkourManager = LuciderParkour.getInstance().getParkourManager();
     private Gui gui;
     private ParkourCategoryMenu parkourCategoryMenu;
+    private final GUIManager guiManager = LuciderParkour.getInstance().getGuiManager();
 
     private final String title;
 
@@ -54,7 +56,7 @@ public class ParkourMainMenu implements NonPagedMenu<LuciderParkour> {
                         });
 
         gui.setDefaultClickAction(event -> {
-            if(event.getWhoClicked().getOpenInventory().getTopInventory().equals(event.getClickedInventory())){
+            if(event.getWhoClicked().getOpenInventory().getTopInventory().equals(gui.getInventory())){
                 ParkourCategory parkourCategory = parkourManager.getBySlot(event.getSlot());
 
                 this.parkourCategoryMenu = new ParkourCategoryMenu(ChatUtils.color(
@@ -65,7 +67,6 @@ public class ParkourMainMenu implements NonPagedMenu<LuciderParkour> {
             }
         });
 
-        gui.getFiller().fill(ItemBuilder.from(Material.GRAY_STAINED_GLASS_PANE).asGuiItem());
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.duck.commands;
 
 import com.duck.LuciderParkour;
 import com.duck.configuration.ConfigurationFactory;
+import com.duck.feature.timer.TimerType;
 import com.duck.user.User;
 import com.duck.user.UserManager;
 import com.duck.utils.ChatUtils;
@@ -16,6 +17,8 @@ public class PreferencesCommand {
 
     private final UserManager userManager = LuciderParkour.getInstance().getUserManager();
     private final ConfigurationFactory configurationFactory = LuciderParkour.getInstance().getConfigurationFactory();
+    private final String userPermissionString = configurationFactory.getGeneralConfiguration().userPermission;
+    private final String adminPermissionString = configurationFactory.getGeneralConfiguration().adminPermission;
 
     @Command(name = "preferences")
     public void onPreferencesCommandResponse(Context<Player> playerContext){
@@ -50,10 +53,23 @@ public class PreferencesCommand {
                         " &7 visibility of scoreboard with best parkour scores has been change to &b" + isVisible)));
             };
 
+            case "settimertype" -> player -> {
+                User user = userManager.getUser(player.getUniqueId()).get();
+
+                String chosenTimerType = playerContext.getArg(1).toUpperCase();
+
+                TimerType timerType = Enum.valueOf(TimerType.class, chosenTimerType);
+
+                user.setTimerType(timerType);
+            };
+
 
             default -> player -> {
                 player.sendMessage(ChatUtils.component(unknownCommandArgument));
             };
         };
+
+        if(playerContext.testPermission(userPermissionString, false))
+            playerConsumer.accept(playerContext.getSender());
     }
 }

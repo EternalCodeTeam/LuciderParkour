@@ -124,7 +124,7 @@ public class PlayerMoveListener implements Listener {
                 Option<ArenaTimer> arenaTimer = userManager.getTimer(player.getUniqueId());
 
                 if(!arenaTimer.isDefined()){
-                    userManager.addTimer(user, new ArenaTimer(uniqueId, TimerType.EXP_BAR));
+                    userManager.addTimer(user, new ArenaTimer(uniqueId, user.getTimerType()));
 
 
                     player.playSound(Sound.sound(

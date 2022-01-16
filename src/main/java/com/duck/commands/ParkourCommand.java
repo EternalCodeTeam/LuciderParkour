@@ -35,6 +35,9 @@ public class ParkourCommand {
     private final ConfigurationFactory configurationFactory = LuciderParkour.getInstance().getConfigurationFactory();
     private final GUIManager guiManager = LuciderParkour.getInstance().getGuiManager();
     private final ParkourCategoryFactory parkourCategoryFactory = LuciderParkour.getInstance().getParkourCategoryFactory();
+    private final String userPermissionString = configurationFactory.getGeneralConfiguration().userPermission;
+    private final String adminPermissionString = configurationFactory.getGeneralConfiguration().adminPermission;
+
 
     @Command(name = "parkour", aliases = {"pk"})
     public void onParkourCommandResponse(Context<Player> playerContext){
@@ -49,58 +52,70 @@ public class ParkourCommand {
             case "createarena" -> player -> {
                 int arenaId = playerContext.getArg(1, int.class);
 
-                parkourFactory.createArena(user.get(), arenaId);
+                if(playerContext.testPermission(adminPermissionString, true)) {
+                    parkourFactory.createArena(user.get(), arenaId);
+                }
             };
 
             case "removearena" -> player -> {
                 int arenaId = playerContext.getArg(1, int.class);
 
-
-                parkourFactory.removeArena(arenaId, user.get());
+                if(playerContext.testPermission(adminPermissionString, true)) {
+                    parkourFactory.removeArena(arenaId, user.get());
+                }
             };
-
-            case "gui" -> player -> guiManager.getParkourMainMenu().openInventory(user.get());
 
             case "random" -> player -> {
                 Parkour randomizedParkour = parkourManager.randomizeParkour();
-
-                parkourManager.join(randomizedParkour, player);
+                if(playerContext.testPermission(userPermissionString, true)) {
+                    parkourManager.join(randomizedParkour, player);
+                }
             };
 
             case "join" -> player -> {
                 int arenaId = playerContext.getArg(1, int.class);
 
-                parkourManager.getArena(arenaId)
+
+                if(playerContext.testPermission(userPermissionString, true)) {
+                    parkourManager.getArena(arenaId)
                         .peek(parkour1 -> parkourManager.join(parkour1, player));
+                }
             };
 
+
             case "leave" -> player -> {
-                Location location = LocationUtils.asFullLocation(configurationFactory.getGeneralConfiguration().lobbyLocation, ", ");
 
-                Option<ArenaTimer> arenaTimer = userManager.getTimer(player.getUniqueId());
+                if(playerContext.testPermission(userPermissionString, true)) {
+                    Location location = LocationUtils.asFullLocation(configurationFactory.getGeneralConfiguration().lobbyLocation, ", ");
 
-                int activeParkour = user.get().getActiveId();
-                if(activeParkour > 0){
-                    if(arenaTimer.isDefined()){
-                        if(!arenaTimer.get().isCancelled())
-                            arenaTimer.get().cancel();
+                    Option<ArenaTimer> arenaTimer = userManager.getTimer(player.getUniqueId());
 
-                        userManager.removeTimer(user.get());
+                    int activeParkour = user.get().getActiveId();
+                    if (activeParkour > 0) {
+                        if (arenaTimer.isDefined()) {
+                            if (!arenaTimer.get().isCancelled())
+                                arenaTimer.get().cancel();
+
+                            userManager.removeTimer(user.get());
+                        }
+
+                        player.teleport(location);
+                        user.get().setActiveId(0);
+                        new LobbyTimer(1, LuciderParkour.getInstance(), user.get());
                     }
-
-                    player.teleport(location);
-                    user.get().setActiveId(0);
-                    new LobbyTimer(1, LuciderParkour.getInstance(), user.get());
                 }
             };
 
             case "setlobby" -> player -> {
-                configurationFactory.getGeneralConfiguration().lobbyLocation = LocationUtils.fromFullLocation(player.getLocation(), ", ");
 
-                configurationFactory.getCdn().render(configurationFactory.getGeneralConfiguration(), Source.of(LuciderParkour.getInstance().getFlatDataManager().getGeneralConfigurationFile()));
+                if(playerContext.testPermission(adminPermissionString, true)) {
+                    configurationFactory.getGeneralConfiguration().lobbyLocation = LocationUtils.fromFullLocation(player.getLocation(), ", ");
+
+                    configurationFactory.getCdn().render(configurationFactory.getGeneralConfiguration(), Source.of(LuciderParkour.getInstance().getFlatDataManager().getGeneralConfigurationFile()));
 
 
-                player.sendMessage(ChatUtils.component(messagePrefix + " &7Changed lobby location."));
+                    player.sendMessage(ChatUtils.component(messagePrefix + " &7Changed lobby location."));
+                }
             };
 
             case "add" -> player -> {
@@ -156,7 +171,9 @@ public class ParkourCommand {
                     default -> player1 -> player1.sendMessage(ChatUtils.component(unknownCommandArgument));
                 };
 
-                addConsumer.accept(player);
+                if(playerContext.testPermission(adminPermissionString, true)) {
+                    addConsumer.accept(player);
+                }
             };
 
             case "remove" -> player -> {
@@ -211,7 +228,9 @@ public class ParkourCommand {
                     default -> player1 -> player1.sendMessage(ChatUtils.component(unknownCommandArgument));
                 };
 
-                removeConsumer.accept(player);
+                if(playerContext.testPermission(adminPermissionString, true)) {
+                    removeConsumer.accept(player);
+                }
             };
 
             case "set" -> player -> {
@@ -227,22 +246,6 @@ public class ParkourCommand {
 
                         parkour.setName(name);
                         player1.sendMessage(ChatUtils.component(messagePrefix + " &7changed name from &6" + previousName + " &7into &b" + parkour.getName()));
-                    };
-
-                    case "category" -> player1 -> {
-                        String category = playerContext.getArg(3, String.class);
-                        int arenaId = playerContext.getArg(2, int.class);
-                        ParkourCategory parkourCategory = parkourManager.getParkourCategory(category).get();
-
-                        if (parkourManager.getAllCategories()
-                                .stream()
-                                .anyMatch(parkourCategory1 -> parkourCategory1.getIds().contains(arenaId))) {
-                            PandaStream.of(parkourManager.getAllCategories())
-                                    .map(parkourCategory1 -> parkourCategory1.getIds().remove(arenaId));
-
-                        }
-                        parkourCategory.getIds().add(arenaId);
-
                     };
 
                     case "spawn" -> player1 -> {
@@ -291,7 +294,9 @@ public class ParkourCommand {
                     default -> player1 -> player1.sendMessage(ChatUtils.component(unknownCommandArgument));
                 };
 
-                setConsumer.accept(player);
+                if(playerContext.testPermission(adminPermissionString, true)) {
+                    setConsumer.accept(player);
+                }
             };
 
             default -> player1 -> player1.sendMessage(ChatUtils.component(unknownCommandArgument));

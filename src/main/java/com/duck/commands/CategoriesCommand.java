@@ -24,6 +24,8 @@ public class CategoriesCommand {
     private final UserManager userManager = LuciderParkour.getInstance().getUserManager();
     private final ParkourCategoryFactory parkourCategoryFactory = LuciderParkour.getInstance().getParkourCategoryFactory();
 
+    private final String userPermissionString = configurationFactory.getGeneralConfiguration().userPermission;
+    private final String adminPermissionString = configurationFactory.getGeneralConfiguration().adminPermission;
 
     @Command(name = "categories")
     public void onCategoriesCommandResponse(Context<Player> playerContext){
@@ -58,6 +60,30 @@ public class CategoriesCommand {
                 parkourCategoryFactory.removeParkourCategory(categoryName, user);
             };
 
+
+            case "addparkour" -> player ->  {
+                String categoryName = playerContext.getArg(1);
+                int id = playerContext.getArg(2, int.class);
+
+                if(!categoryName.isEmpty()){
+                    ParkourCategory parkourCategory = parkourManager.getParkourCategory(categoryName).get();
+
+                    if(!parkourCategory.getIds().contains(id) && parkourManager.getArena(id).isDefined()){
+                        parkourCategory.getIds().add(id);
+                    }
+                }
+            };
+
+            case "removeparkour" -> player ->  {
+                String categoryName = playerContext.getArg(1);
+                int id = playerContext.getArg(2, int.class);
+
+                if(!categoryName.isEmpty()){
+                    ParkourCategory parkourCategory = parkourManager.getParkourCategory(categoryName).get();
+
+                    parkourCategory.getIds().remove(id);
+                }
+            };
 
             case "set" -> player -> {
 
@@ -181,6 +207,7 @@ public class CategoriesCommand {
         };
 
 
-        firstArgumentConsumer.accept(playerContext.getSender());
+        if(playerContext.testPermission(adminPermissionString, false))
+            firstArgumentConsumer.accept(playerContext.getSender());
     }
 }

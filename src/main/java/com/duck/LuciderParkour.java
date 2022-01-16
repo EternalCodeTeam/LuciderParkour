@@ -10,7 +10,7 @@ import com.duck.data.flat.FlatDataTransfer;
 import com.duck.feature.gui.GUIManager;
 import com.duck.feature.timer.ParticlesTimer;
 import com.duck.listeners.*;
-import com.duck.listeners.inventory.PlayerInventoryDragItemsListener;
+import com.duck.listeners.inventory.PlayerInventoryClickListener;
 import com.duck.listeners.inventory.PlayerInventoryDropItemsListener;
 import com.duck.listeners.inventory.PlayerInventoryInteractListener;
 import com.duck.parkour.ParkourCategoryFactory;
@@ -23,15 +23,16 @@ import lombok.SneakyThrows;
 import me.saiintbrisson.bukkit.command.BukkitFrame;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.java.annotation.dependency.Dependency;
+import org.bukkit.plugin.java.annotation.dependency.DependsOn;
 import org.bukkit.plugin.java.annotation.plugin.ApiVersion;
 import org.bukkit.plugin.java.annotation.plugin.Plugin;
 import org.bukkit.scoreboard.ScoreboardManager;
 import panda.std.stream.PandaStream;
 
-import java.util.logging.Level;
-
 @Plugin(name = "LuciderParkour", version = "1.0.0b")
 @ApiVersion(ApiVersion.Target.v1_17)
+@Dependency("LuckPerms")
 public class LuciderParkour extends JavaPlugin {
 
     private static LuciderParkour instance;
@@ -175,14 +176,16 @@ public class LuciderParkour extends JavaPlugin {
 
     public void buildListeners(){
         PandaStream.of(new PlayerJoinListener(),
-                        new PlayerMoveListener(),
-                        new PlayerFallDamageListener(),
-                        new PlayerFoodLevelChangeListener(),
-                        new ChatListener(),
-                        new DateChangeListener(),
-                        new PlayerInventoryInteractListener(),
-                        new PlayerInventoryDragItemsListener(),
-                        new PlayerInventoryDropItemsListener())
+                new PlayerMoveListener(),
+                new PlayerFallDamageListener(),
+                new PlayerFoodLevelChangeListener(),
+                new ChatListener(),
+                new DateChangeListener(),
+                new PlayerInventoryInteractListener(),
+                new PlayerInventoryClickListener(),
+                new PlayerInventoryDropItemsListener(),
+                new PlayerDamageListener(),
+                new PlayerFarmLandListener())
                 .forEach(listener -> Bukkit.getPluginManager().registerEvents(listener, this));
     }
 
