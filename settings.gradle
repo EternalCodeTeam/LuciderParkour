@@ -1,2 +1,5 @@
 rootProject.name = 'LuciderParkour'
+include 'core'
+include 'untitled'
+include 'api'
 
