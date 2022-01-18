@@ -7,6 +7,7 @@ import com.duck.commands.UserCommand;
 import com.duck.configuration.ConfigurationFactory;
 import com.duck.data.flat.FlatDataManager;
 import com.duck.data.flat.FlatDataTransfer;
+import com.duck.data.sql.SQLManager;
 import com.duck.feature.gui.GUIManager;
 import com.duck.feature.timer.ParticlesTimer;
 import com.duck.listeners.*;
@@ -57,6 +58,8 @@ public class LuciderParkour extends JavaPlugin {
 
     private ScoreboardManager scoreboardManager;
 
+    private SQLManager sqlManager;
+
     @Override
     public void onDisable() {
         flatDataTransfer.transferUsersIntoConfiguration();
@@ -87,6 +90,7 @@ public class LuciderParkour extends JavaPlugin {
         this.parkourManager = new ParkourManager();
         this.parkourFactory = new ParkourFactory();
         this.parkourCategoryFactory = new ParkourCategoryFactory();
+        this.sqlManager = new SQLManager();
 
 
         configurationFactory.initConfigs(this);
@@ -137,6 +141,9 @@ public class LuciderParkour extends JavaPlugin {
         return userFactory;
     }
 
+    public SQLManager getSqlManager() {
+        return sqlManager;
+    }
 
     public BukkitFrame getBukkitFrame() {
         return bukkitFrame;

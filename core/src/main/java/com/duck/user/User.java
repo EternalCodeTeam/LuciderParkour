@@ -30,12 +30,8 @@ public class User {
 
     private int scoresLimit;
 
-    private boolean highScoresScoreboardVisibility;
-
-    private int prefixIndex;
     private TimerType timerType;
 
-    private List<User> friends;
 
     public void execute(Consumer<Player> playerConsumer){
         Option<Player> player = Option.of(Bukkit.getPlayer(uuid));
